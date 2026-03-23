@@ -1,0 +1,340 @@
+#!/usr/bin/python
+
+import sqlite3
+from sqlite3 import Error
+ 
+def creer_connexion(db_file):
+    """ cree une connexion a la base de donnees SQLite
+        specifiee par db_file
+    :param db_file: fichier BD
+    :return: objet connexion ou None
+    """
+    try:
+        conn = sqlite3.connect(db_file)
+		#On active les foreign keys
+        conn.execute("PRAGMA foreign_keys = 1")
+        return conn
+    except Error as e:
+        print(e)
+ 
+    return None
+
+# ========================================#
+# On peut changer la prime
+def select_pirates_superieur_prime(conn):
+    """
+    :param conn: objet connexion
+    :return:
+    """
+    n=int(input("Prime minimale (ex: 1 000 000 000 - tout collé) : "))
+    cur = conn.cursor()
+    cur.execute(
+    "select nomP, prime " \
+    "from LesPirates " \
+    "where prime>?", (n,)
+    )
+ 
+    afficher("Pirates avec prime > " + str(n), cur)
+
+
+# On peut changer le role
+def select_pirates_role(conn):
+    """
+    :param conn: objet connexion
+    :return:
+    """
+    roles = (
+        "\nROLES DISPONIBLES : \n"
+        "------------------------------------------------------------------\n"
+        "Capitaine, Bras droit, Premier Maitre, Commandant, Officier, \n"
+        "Commandant 1re Division (jusqu'a 16e), Ministre de la Farine (et autres ministres)\n"
+        "Navigatrice, Tireur elite, Cuisinier, Medecin, Archeologue, Charpentier, \n"
+        "Musicien, Timonier, Navigateur, Scientifique, Hypnotiste, Messager\n"
+        "Membre, Membre Honoraire, Apprenti, Allie, Calamite, Tobi Roppo, \n"
+        "Zombie, Zombie Geant, Unite speciale, Dompteur, Acrobate, Conseiller\n"
+        "------------------------------------------------------------------\n"
+        "\nROLE VOULU : "
+    )
+
+    role = input(roles)    
+    cur = conn.cursor()
+    cur.execute(
+    "select p.nomP, e.nomE, r.role " \
+    "from LesPirates p join LesRoles r on(p.nomP = r.nomP) " \
+        "join LesEquipages e on(r.id_equipage = e.id_equipage) " \
+        "where r.role = ?", (role,)
+    )
+ 
+    afficher("Pirates avec role : " + role, cur)
+
+
+def select_ordre_marine_grade_prime(conn):
+    """
+    :param conn: objet connexion
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute(
+    "select nomM, Grade, prime " \
+    "from LaMarine " \
+    "order by prime" \
+    )
+
+    afficher("Marines triés par prime", cur)
+
+
+# On peut changer la region
+def select_max_prime_par_region(conn):
+    """
+    :param conn: objet connexion
+    :return:
+    """
+    regions = (
+        "\nREGIONS DISPONIBLES : \n"
+        "------------------------------------------------------------------\n"
+        "MERS/ARCHIPELS : East Blue, Sabaody Archipelago, Archipel Sabaody, \n"
+        "                 Archipel Totto Land, mer, Fish-Man Island\n"
+        "PAYS/ROYAUMES :  Arabasta, Alabasta, Wano, Pays des Wa, Royaume de Goa, \n"
+        "                 Royaume de Flevance, Royaume de Sorbet, Dressrosa, \n"
+        "                 Pays des Fleurs, Royaume de Drum, Drum Island\n"
+        "VILLES/VILLAGES: Fuschia, Syrup Village, Syrup, Cocoyasi Village, \n"
+        "                 Village de Kokoyashi, Water Seven, Water 7, \n"
+        "                 Shells Town, Loguetown, Whiskey Peak\n"
+        "ILES/LIEUX :     Whole Cake Island, Kuraigana, Ile de Dawn, Ohara, \n"
+        "                 Thriller Bark, God Valley, Spider Miles, Skypiea, \n"
+        "                 Amazon Lily, Little Garden, Jaya, Enies Lobby, \n"
+        "                 Punk Hazard, Zo, Laugh Tale, Erbaf, Baltigo\n"
+        "BASES/PRISONS :  Marineford, LaMarine Ford, Impel Down, Enies Lobby\n"
+        "------------------------------------------------------------------\n"
+        "\nREGION VOULUE : "
+    )
+    region=input(regions)
+    cur = conn.cursor()
+    cur.execute(
+    "select max(p.prime), p.nomP " \
+    "from LesPirates p join LesRegions r on(p.id_region = r.id_region) " \
+    "where r.nomR = ?", (region,)
+    )
+ 
+    afficher("Prime max dans la region : " + region, cur)
+
+
+def select_nb_marine_par_region(conn):
+    """
+    :param conn: objet connexion
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute(
+    "select r.nomR, count(m.nomM), count(m.nomF) " \
+    "from LaMarine m join LesRegions r on(m.id_region = r.id_region) " \
+        "group by r.id_region"
+    )
+ 
+    afficher("Nombre de marines et fruits par region", cur)
+
+
+# On peut changer la region et/ou le pirate
+def select_region_prime_superieur_pirate(conn):
+    """
+    :param conn: objet connexion
+    :return:
+    """
+    region=input("Nom de region (ex: East Blue) : ")
+    pirate=input("Pirate (ex: Monkey D. Luffy) : ")
+    cur = conn.cursor()
+    cur.execute(
+    "select p.nomP, p.prime " \
+    "from LesPirates p join LesRegions r on(p.id_region = r.id_region) " \
+    "where r.nomR = ? and p.prime >= (select prime " \
+                                                "from LesPirates " \
+                                                "where nomP = ?)", (region, pirate,)
+    )
+ 
+    afficher("Pirates dans " + region + " avec prime >= " + pirate, cur)
+
+
+def select_role_pirates_sans_fruit(conn):
+    """
+    :param conn: objet connexion
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute(
+    "select p.nomP, r.role, p.prime " \
+    "from LesPirates p join LesRoles r on(p.nomP = r.nomP) " \
+    
+        "except " \
+        "select p.nomP, r.role, p.prime " \
+        "from LesPirates p join LesRoles r on(p.nomP = r.nomP) " \
+            "join LesFruits f on(p.nomF = f.nomF)"
+    )
+ 
+    afficher("Pirates sans fruit et leur role dans leur equipage respectif", cur)
+
+
+def select_prime_par_equipage(conn):
+    """
+    :param conn: objet connexion
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute(
+    "select e.nomE, count(p.nomP), sum(p.prime) " \
+    "from LesEquipages e join LesRoles r on(e.id_equipage = r.id_equipage) " \
+        "join LesPirates p on(r.nomP = p.nomP) " \
+        "group by e.id_equipage " \
+        "order by count(p.nomP)"
+    )
+ 
+    afficher("Prime totale par equipage (avec leur nombre total de pirate)", cur)
+
+
+def select_fruit_non_manger(conn):
+    """
+    :param conn: objet connexion
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute(
+    "select nomF, type, pouvoir " \
+    "from LesFruits " \
+        
+        "except " \
+        "select nomF, type, pouvoir " \
+        "from (" \
+            "select m.nomF, f.type, f.pouvoir " \
+            "from LaMarine m join LesFruits f on(m.nomF = f.nomF) " \
+                
+                "union " \
+                "select p.nomF, f.type, f.pouvoir " \
+                "from LesPirates p join LesFruits f on(p.nomF = f.nomF))"
+    )
+ 
+    afficher("Fruit pas encore mange par une personne", cur)
+
+# ========================================#
+
+def afficher(titre, cur):
+    rows = cur.fetchall()
+    cols = [desc[0] for desc in cur.description]
+
+    L = 40
+    sep = "+" + ("-" * (L + 2) + "+") * len(cols)
+
+    print(f"\n{sep}\n  {titre}\n{sep}")
+    print("| " + " | ".join(f"{c:<{L}}" for c in cols) + " |")
+    print(sep)
+
+    if rows:
+        for row in rows:
+            ligne_aff = []
+            for v in row:
+                try:
+                    num = int(v)
+                    s = f"{num:,}".replace(",", " ")
+                    s = f"{s:>15}" 
+                except (ValueError, TypeError):
+                    s = str(v)
+                
+                ligne_aff.append(s)
+                print("| " + " | ".join(f"{val:<{L}}" for val in ligne_aff) + " |")
+
+    print(f"{sep}\n  {len(rows)} ligne(s)\n\n")
+
+def majBD(conn, file):
+
+    # Lecture du fichier et placement des requetes dans un tableau
+    createFile = open(file, 'r')
+    createSql = createFile.read()
+    createFile.close()
+    sqlQueries = createSql.split(";")
+
+    # Execution de toutes les requetes du tableau
+    cursor = conn.cursor()
+    for query in sqlQueries:
+        cursor.execute(query)
+
+        
+def main():
+    database = "OnePiece.db"
+
+    # creer une connexion a la BD
+    conn = creer_connexion(database)
+    
+    # remplir la BD 
+    print("On cree et on initialise les tables.")
+    majBD(conn, "OnePiece.sql")
+
+    print("==========================================================================================")
+    print("1 - Pirates avec une prime superieur a une prime choisi")
+    print("2 - Tous les pirates avec le role choisi")
+    print("3 - Tri par ordre croissant les marines avec leur grade par rapport au prime")
+    print("4 - Prime maximal par region choisi")
+    print("5 - Nombre de marine et de fruit par region")
+    print("6 - Pirates avec une prime superieur a celle d un pirate choisi dans une region choisi")
+    print("7 - Pirates sans fruit et leur role dans leur equipage respectif ")
+    print("8 - Prime totale par equipage (avec leur nombre total de pirate)")
+    print("9 - Fruit pas encore mange par une personne")
+    print("0 - Quitter")
+    print("==========================================================================================\n")
+    
+    # lire la BD
+    while(True):
+        res = int(input("-> "))
+
+        match res:
+            case 0: break
+            case 1: 
+                select_pirates_superieur_prime(conn)
+                print("Pirate, prime")
+                print("\n 10 - pour voir le menu\n")
+            case 2: 
+                select_pirates_role(conn)
+                print("Pirate, equipage, role")
+                print("\n 10 - pour voir le menu\n")
+            case 3: 
+                select_ordre_marine_grade_prime(conn)
+                print("Marine, grade, prime")
+                print("\n 10 - pour voir le menu\n")
+            case 4: 
+                select_max_prime_par_region(conn)
+                print("prime, Pirate")
+                print("\n 10 - pour voir le menu\n")
+            case 5: 
+                select_nb_marine_par_region(conn)
+                print("Region, nb marine, nb fruit")
+                print("\n 10 - pour voir le menu\n")
+            case 6: 
+                select_region_prime_superieur_pirate(conn)
+                print("Pirate, prime")
+                print("\n 10 - pour voir le menu\n")
+            case 7: 
+                select_role_pirates_sans_fruit(conn)
+                print("Pirate, role, prime")
+                print("\n 10 - pour voir le menu\n")
+            case 8: 
+                select_prime_par_equipage(conn)
+                print("Equipage, nb pirate, somme prime")
+                print("\n 10 - pour voir le menu\n")
+            case 9: 
+                select_fruit_non_manger(conn)
+                print("Fruit, type, pouvoir")
+                print("\n 10 - pour voir le menu\n")
+            case 10:
+                print("\n==========================================================================================")
+                print("1 - Pirates avec une prime superieur a une prime choisi")
+                print("2 - Tous les pirates avec le role choisi")
+                print("3 - Tri par ordre decroissant les marines avec leur grade par rapport au prime")
+                print("4 - Prime maximal par region choisi")
+                print("5 - Nombre de marine et de fruit par region")
+                print("6 - Pirates avec une prime superieur a celle d un pirate choisi dans une region choisi")
+                print("7 - Pirates sans fruit et leur role dans leur equipage respectif ")
+                print("8 - Prime totale par equipage (avec leur nombre total de pirate)")
+                print("9 - Fruit pas encore mange par une personne")
+                print("0 - Quitter")
+                print("==========================================================================================\n")
+
+
+if __name__ == "__main__":
+    main()
