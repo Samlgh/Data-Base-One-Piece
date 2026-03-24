@@ -294,15 +294,15 @@ def main():
     majBD(conn, "OnePiece.sql")
 
     print("==========================================================================================")
-    print("1 - Pirates avec une prime superieur a une prime choisi")
-    print("2 - Tous les pirates avec le role choisi")
-    print("3 - Tri par ordre croissant les marines avec leur grade par rapport au prime")
-    print("4 - Prime maximal par region choisi")
-    print("5 - Nombre de marine et de fruit par region")
-    print("6 - Pirates avec une prime superieur a celle d un pirate choisi dans une region choisi")
-    print("7 - Pirates sans fruit et leur role dans leur equipage respectif ")
-    print("8 - Prime totale par equipage (avec leur nombre total de pirate)")
-    print("9 - Fruit pas encore mange par une personne")
+    print("1 - Lister les pirates dont la prime dépasse un seuil donné")
+    print("2 - Afficher les pirates ayant un rôle donné")
+    print("3 - Afficher tous les marines triés par prime croissante avec leur grade")
+    print("4 - Trouver la prime maximale dans une région donnée et le pirate associé")
+    print("5 - Compter le nombre de marines et de fruits du démon par région")
+    print("6 - Lister les pirates d'une région ayant une prime au moins égale à celle d'un pirate donné")
+    print("7 - Lister les pirates ayant un rôle mais ne possédant pas de fruit du démon")
+    print("8 - Afficher la somme des primes et le nombre de pirates par équipage")
+    print("9 - Lister les fruits du démon non consommés par un pirate ou un marine")
     print("0 - Quitter")
     print("==========================================================================================\n")
     
@@ -350,21 +350,17 @@ def main():
                 print("\n 10 - pour voir le menu\n")
             case 10:
                 print("\n==========================================================================================")
-                print("1 - Pirates avec une prime superieur a une prime choisi")
-                print("2 - Tous les pirates avec le role choisi")
-                print("3 - Tri par ordre decroissant les marines avec leur grade par rapport au prime")
-                print("4 - Prime maximal par region choisi")
-                print("5 - Nombre de marine et de fruit par region")
-                print("6 - Pirates avec une prime superieur a celle d un pirate choisi dans une region choisi")
-                print("7 - Pirates sans fruit et leur role dans leur equipage respectif ")
-                print("8 - Prime totale par equipage (avec leur nombre total de pirate)")
-                print("9 - Fruit pas encore mange par une personne")
+                print("1 - Lister les pirates dont la prime dépasse un seuil donné")
+                print("2 - Afficher les pirates ayant un rôle donné")
+                print("3 - Afficher tous les marines triés par prime croissante avec leur grade")
+                print("4 - Trouver la prime maximale dans une région donnée et le pirate associé")
+                print("5 - Compter le nombre de marines et de fruits du démon par région")
+                print("6 - Lister les pirates d'une région ayant une prime au moins égale à celle d'un pirate donné")
+                print("7 - Lister les pirates ayant un rôle mais ne possédant pas de fruit du démon")
+                print("8 - Afficher la somme des primes et le nombre de pirates par équipage")
+                print("9 - Lister les fruits du démon non consommés par un pirate ou un marine")
                 print("0 - Quitter")
                 print("==========================================================================================\n")
-
-
-if __name__ == "__main__":
-    main()
 
 
 if __name__ == "__main__":
