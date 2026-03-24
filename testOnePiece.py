@@ -1,3 +1,5 @@
+# BINOME :  LAGHROUCHE Samir, CARBONNEAUX Jules
+
 #!/usr/bin/python
 
 import sqlite3
@@ -19,7 +21,46 @@ def creer_connexion(db_file):
  
     return None
 
+def afficher(titre, cur):
+    # Récup les données et les noms des colonnes
+    rows = cur.fetchall()
+    cols = [desc[0] for desc in cur.description]
+
+    # Largeur de chaque colonne à 40 (pour les grands noms..., et séparateur (+---+---+---+))
+    L = 40
+    sep = "+" + ("-" * (L + 2) + "+") * len(cols)
+
+    #Affichage des titres de colonnes alignés à gauche
+    print(f"\n{sep}\n  {titre}\n{sep}")
+    print("| " + " | ".join(f"{c:<{L}}" for c in cols) + " |")
+    print(sep)
+
+    if rows:
+        for row in rows:
+            ligne_aff = []
+            for v in row:
+                # on met les espaces pour les milliers et on aligne à droite sur 15 caractères pour avoir l'espace pour les grandes primes (et les "0" du fond soient tous l'un sous l'autre)
+                if type(v) == int or type(v) == float:
+                    s = f"{v:,}".replace(",", " ")
+                    s = f"{s:>15}" 
+                else:
+                    #si c'est du texte, on le laisse tel que
+                    s = str(v)
+
+                ligne_aff.append(s)
+            
+            # Affichage de la ligne, avec les valeurs alignées à gauche et séparées par " | "
+            print("| " + " | ".join(f"{val:<{L}}" for val in ligne_aff) + " |")
+
+    # Affiche nbre total de lignes
+    print(f"{sep}\n  {len(rows)} ligne(s)\n\n")
+
+
+
 # ========================================#
+
+# 1 - Lister les pirates dont la prime dépasse un seuil donné.
+
 # On peut changer la prime
 def select_pirates_superieur_prime(conn):
     """
@@ -36,6 +77,7 @@ def select_pirates_superieur_prime(conn):
  
     afficher("Pirates avec prime > " + str(n), cur)
 
+# 2 - fficher les pirates ayant un rôle donné.
 
 # On peut changer le role
 def select_pirates_role(conn):
@@ -68,6 +110,8 @@ def select_pirates_role(conn):
     afficher("Pirates avec role : " + role, cur)
 
 
+# 3 - Afficher tous les marines triés par prime croissante avec leur grade.
+
 def select_ordre_marine_grade_prime(conn):
     """
     :param conn: objet connexion
@@ -82,6 +126,8 @@ def select_ordre_marine_grade_prime(conn):
 
     afficher("Marines triés par prime", cur)
 
+
+#4 - Trouver la prime maximale dans une région donnée et le pirate associé.
 
 # On peut changer la region
 def select_max_prime_par_region(conn):
@@ -119,6 +165,8 @@ def select_max_prime_par_region(conn):
     afficher("Prime max dans la region : " + region, cur)
 
 
+# 5 - Compter le nombre de marines et de fruits du démon par région
+
 def select_nb_marine_par_region(conn):
     """
     :param conn: objet connexion
@@ -134,14 +182,16 @@ def select_nb_marine_par_region(conn):
     afficher("Nombre de marines et fruits par region", cur)
 
 
+#6 - Lister les pirates d'une région ayant une prime au moins égale à celle d'un pirate donné .
+
 # On peut changer la region et/ou le pirate
 def select_region_prime_superieur_pirate(conn):
     """
     :param conn: objet connexion
     :return:
     """
-    region=input("Nom de region (ex: East Blue) : ")
-    pirate=input("Pirate (ex: Monkey D. Luffy) : ")
+    region=input("Nom de region (ex: East Blue, Wano, Whole Cake Island) : ")
+    pirate=input("Pirate (ex: Monkey D. Luffy, Yamato, Tony Tony Chopper, Usopp) : ")
     cur = conn.cursor()
     cur.execute(
     "select p.nomP, p.prime " \
@@ -153,6 +203,8 @@ def select_region_prime_superieur_pirate(conn):
  
     afficher("Pirates dans " + region + " avec prime >= " + pirate, cur)
 
+
+# 7 - Lister les pirates ayant un rôle mais ne possédant pas de fruit du démon.
 
 def select_role_pirates_sans_fruit(conn):
     """
@@ -172,6 +224,7 @@ def select_role_pirates_sans_fruit(conn):
  
     afficher("Pirates sans fruit et leur role dans leur equipage respectif", cur)
 
+# 8 - Afficher la somme des primes et le nombre de pirates par équipage.
 
 def select_prime_par_equipage(conn):
     """
@@ -189,6 +242,7 @@ def select_prime_par_equipage(conn):
  
     afficher("Prime totale par equipage (avec leur nombre total de pirate)", cur)
 
+# 9 - Lister les fruits du démon non consommés par un pirate ou un marine.
 
 def select_fruit_non_manger(conn):
     """
@@ -214,33 +268,6 @@ def select_fruit_non_manger(conn):
     afficher("Fruit pas encore mange par une personne", cur)
 
 # ========================================#
-
-def afficher(titre, cur):
-    rows = cur.fetchall()
-    cols = [desc[0] for desc in cur.description]
-
-    L = 40
-    sep = "+" + ("-" * (L + 2) + "+") * len(cols)
-
-    print(f"\n{sep}\n  {titre}\n{sep}")
-    print("| " + " | ".join(f"{c:<{L}}" for c in cols) + " |")
-    print(sep)
-
-    if rows:
-        for row in rows:
-            ligne_aff = []
-            for v in row:
-                try:
-                    num = int(v)
-                    s = f"{num:,}".replace(",", " ")
-                    s = f"{s:>15}" 
-                except (ValueError, TypeError):
-                    s = str(v)
-                
-                ligne_aff.append(s)
-                print("| " + " | ".join(f"{val:<{L}}" for val in ligne_aff) + " |")
-
-    print(f"{sep}\n  {len(rows)} ligne(s)\n\n")
 
 def majBD(conn, file):
 
@@ -334,6 +361,10 @@ def main():
                 print("9 - Fruit pas encore mange par une personne")
                 print("0 - Quitter")
                 print("==========================================================================================\n")
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
